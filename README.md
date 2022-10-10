@@ -1,3 +1,3 @@
 # EMInversion
 
-Grid search inversion for DUALEM device
+Inversion schemes for DUALEM device
