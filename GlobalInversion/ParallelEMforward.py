@@ -38,44 +38,39 @@ th1 = 5   # maximum thickness in m
 # thickness array
 thicks = np.linspace(th0, th1, nsl)
 
-def forward_parallel(is1, is2):
-    time.sleep(1)
+def forward_parallel(is1, is2, is3, it1, it2):
+    time.sleep(0.1)
     res[1] = 1/conds[is1] # set resistivity of first layer
     res[2] = 1/conds[is2] # set resistivity of second layer
-        
-    for is3 in range(0, nsl): 
-        res[3] = 1/conds[is3] # set resistivity of third layer
-          
-        for it1 in range(0, nsl):
-            depth[1] = thicks[it1] # set thickness of first layer
-                
-            for it2 in range(0, nsl):
-                depth[2] = depth[1] + thicks[it2] # set thickness of second layer
-                    
-                # Compute fields
-                   
-                HCP = empymod.loop(Hsource, Hreceivers, depth, res, freq, xdirect=None, mrec = 'loop', verb = 0)
-                VCP = empymod.loop(Vsource, Vreceivers, depth, res, freq, xdirect=None, mrec = 'loop', verb = 0)
-                PRP = empymod.loop(Hsource, Vreceivers, depth, res, freq, xdirect=None, mrec = 'loop', verb = 0)
-                    
-                # Store in hypercube
-                    
-               # Zcube[is1, is2, is3, it1, it2, 0:3] = HCP
-               # Zcube[is1, is2, is3, it1, it2, 3:6] = VCP
-               # Zcube[is1, is2, is3, it1, it2, 6:9] = PRP
-                    
-                Z = np.hstack((HCP, VCP, PRP))
-                    
-                # Calculate amplitude of difference
-                    
-                nZdiff = np.abs(Z - Zdata) **2 / np.abs(Zdata)**2
+    res[3] = 1/conds[is3] # set resistivity of third layer
+    depth[1] = thicks[it1] # set thickness of first layer
+    depth[2] = depth[1] + thicks[it2] # set thickness of second layer
 
-                merr = np.log10(np.sqrt(np.sum(nZdiff)))
-                    
-    return Z, nZdiff, merr
+    # Compute fields
+
+    HCP = empymod.loop(Hsource, Hreceivers, depth, res, freq, xdirect=None, mrec = 'loop', verb = 0)
+    VCP = empymod.loop(Vsource, Vreceivers, depth, res, freq, xdirect=None, mrec = 'loop', verb = 0)
+    PRP = empymod.loop(Hsource, Vreceivers, depth, res, freq, xdirect=None, mrec = 'loop', verb = 0)
+
+    # Store in hypercube
+
+    # Zcube[is1, is2, is3, it1, it2, 0:3] = HCP
+    # Zcube[is1, is2, is3, it1, it2, 3:6] = VCP
+    # Zcube[is1, is2, is3, it1, it2, 6:9] = PRP
+
+    Z = np.hstack((HCP, VCP, PRP))
+
+    # Calculate amplitude of difference
+
+    #nZdiff = np.abs(Z - Zdata) **2 / np.abs(Zdata)**2
+    #merr = np.log10(np.sqrt(np.sum(nZdiff)))
+
+    return Z
 
 starttime = time.time()
-Results = Parallel(n_jobs=48)(delayed(forward_parallel)(i, j) for i in range(nsl) for j in range(nsl))
+Results = Parallel(n_jobs=48,verbose=10)(delayed(forward_parallel)(i, j, k, m, n) for i in range(nsl) for j in range(nsl) for k in range(nsl) for m in range(nsl) for n in $
 
 endtime = time.time() - starttime
 print('Execution time parallel is:', endtime)
+
+np.save('Results', Results)                     
