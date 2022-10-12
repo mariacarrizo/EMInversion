@@ -26,7 +26,7 @@ res = [2e14, 10, 20, 10]
 depth = [0, 2, 5]
 
 # sampling of depth and conductivities
-nsl = 5
+nsl = 51
 
 s0 = -2 # minimum conductivity in S/m
 s1 = -0.8 # maximum conductivity in S/m
@@ -39,7 +39,7 @@ th1 = 5   # maximum thickness in m
 thicks = np.linspace(th0, th1, nsl)
 
 def forward_parallel(is1, is2, is3, it1, it2):
-    time.sleep(0.1)
+    time.sleep(0.2)
     res[1] = 1/conds[is1] # set resistivity of first layer
     res[2] = 1/conds[is2] # set resistivity of second layer
     res[3] = 1/conds[is3] # set resistivity of third layer
@@ -68,10 +68,11 @@ def forward_parallel(is1, is2, is3, it1, it2):
     return Z
 
 starttime = time.time()
+
 Results = Parallel(n_jobs=48,verbose=10)(delayed(forward_parallel)(i, j, k, m, n) for i in range(nsl) for j in range(nsl) 
                                          for k in range(nsl) for m in range(nsl) for n in range(nsl))
 
 endtime = time.time() - starttime
 print('Execution time parallel is:', endtime)
 
-np.save('Results', Results)                     
+np.save('Results51', Results51)                     
