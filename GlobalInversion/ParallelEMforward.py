@@ -68,7 +68,8 @@ def forward_parallel(is1, is2, is3, it1, it2):
     return Z
 
 starttime = time.time()
-Results = Parallel(n_jobs=48,verbose=10)(delayed(forward_parallel)(i, j, k, m, n) for i in range(nsl) for j in range(nsl) for k in range(nsl) for m in range(nsl) for n in $
+Results = Parallel(n_jobs=48,verbose=10)(delayed(forward_parallel)(i, j, k, m, n) for i in range(nsl) for j in range(nsl) 
+                                         for k in range(nsl) for m in range(nsl) for n in range(nsl))
 
 endtime = time.time() - starttime
 print('Execution time parallel is:', endtime)
