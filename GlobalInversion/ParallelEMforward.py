@@ -39,7 +39,7 @@ th1 = 5   # maximum thickness in m
 thicks = np.linspace(th0, th1, nsl)
 
 def forward_parallel(is1, is2, is3, it1, it2):
-    time.sleep(0.2)
+    time.sleep(0.01)
     res[1] = 1/conds[is1] # set resistivity of first layer
     res[2] = 1/conds[is2] # set resistivity of second layer
     res[3] = 1/conds[is3] # set resistivity of third layer
@@ -69,7 +69,7 @@ def forward_parallel(is1, is2, is3, it1, it2):
 
 starttime = time.time()
 
-Results = Parallel(n_jobs=48,verbose=10)(delayed(forward_parallel)(i, j, k, m, n) for i in range(nsl) for j in range(nsl) 
+Results = Parallel(n_jobs=48,verbose=1)(delayed(forward_parallel)(i, j, k, m, n) for i in range(nsl) for j in range(nsl) 
                                          for k in range(nsl) for m in range(nsl) for n in range(nsl))
 
 endtime = time.time() - starttime
