@@ -3,18 +3,26 @@ import numpy as np
 import time
 from joblib import Parallel, delayed
 
-# Receivers geometry
+# Define Dualem-482 geometry
 
 offsets = np.array([2, 4, 8]) # in meters
-dip = np.array([0, 90])
+height = -0.10 # meters height From ground surface to center of coils
+rad = 0.08 # Define radius of coil (8 cm)
 
-Hreceivers = [offsets, offsets*0, 0, 0, 0]
-Vreceivers = [offsets, offsets*0, 0, 0, 90]
+# Source and receivers geometry
 
-# Source geometry
+# For HCP
+Hsource = [-rad, rad, -rad, rad, height, height]
+Hreceivers = [offsets-rad, offsets+rad,
+              np.ones(3)*-rad, np.ones(3)*rad, height, height]
 
-Hsource = [0, 0, 0 ,0 , 0]
-Vsource = [0, 0, 0, 0, 90]
+# For VCP
+Vsource = [0, 0, height, 90, 0]
+Vreceivers = [offsets, offsets*0, height, 90, 0]
+
+# For PRP
+Psource = [0, 0, height]
+Preceivers = [offsets, offsets*0, height]
 
 # Frequency
 
@@ -48,22 +56,19 @@ def forward_parallel(is1, is2, is3, it1, it2):
 
     # Compute fields
 
-    HCP = empymod.loop(Hsource, Hreceivers, depth, res, freq, xdirect=None, mrec = 'loop', verb = 0)
-    VCP = empymod.loop(Vsource, Vreceivers, depth, res, freq, xdirect=None, mrec = 'loop', verb = 0)
-    PRP = empymod.loop(Hsource, Vreceivers, depth, res, freq, xdirect=None, mrec = 'loop', verb = 0)
+    HCP_Hs = empymod.loop(Hsource, Hreceivers, depth, res, freq, xdirect=None, mrec = 'loop', verb=0)
+    VCP_Hs = empymod.loop(Vsource, Vreceivers, depth, res, freq, xdirect=None, mrec = 'loop', verb=0)
+    PRP_Hs = empymod.dipole(Psource, Preceivers, depth, res, freq, ab=64, xdirect=None, verb=0)
 
-    # Store in hypercube
+    HCP_Hp = empymod.loop(Hsource, Hreceivers, depth=[], res=[2e14], freqtime=freq, mrec = 'loop', verb=0)
+    VCP_Hp = empymod.loop(Vsource, Vreceivers, depth=[], res=[2e14], freqtime=freq, mrec = 'loop', verb=0)
+    PRP_Hp = empymod.dipole(Psource, Preceivers, depth=[], res=[2e14], freqtime=freq, ab=66, verb=0)
 
-    # Zcube[is1, is2, is3, it1, it2, 0:3] = HCP
-    # Zcube[is1, is2, is3, it1, it2, 3:6] = VCP
-    # Zcube[is1, is2, is3, it1, it2, 6:9] = PRP
+    Q_HCP = np.abs(np.imag(HCP_Hs/HCP_Hp))
+    Q_VCP = np.abs(np.imag(VCP_Hs/VCP_Hp))
+    Q_PRP = np.abs(np.imag(PRP_Hs/PRP_Hp))
 
-    Z = np.hstack((HCP, VCP, PRP))
-
-    # Calculate amplitude of difference
-
-    #nZdiff = np.abs(Z - Zdata) **2 / np.abs(Zdata)**2
-    #merr = np.log10(np.sqrt(np.sum(nZdiff)))
+    Z = np.hstack((Q_HCP, Q_VCP, Q_PRP))
 
     return Z
 
